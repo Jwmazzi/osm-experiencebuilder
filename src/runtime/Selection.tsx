@@ -1,5 +1,4 @@
 import * as React from "react"
-import { ConsoleReporter } from "jasmine"
 
 export default class Selection extends React.Component {
 
@@ -15,5 +14,5 @@ export default class Selection extends React.Component {
             <select id={this.props.id}> {options} </select>
         )
     }
-    
+
 }
