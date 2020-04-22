@@ -1,0 +1,36 @@
+{
+  "osm": {
+    "etypes": {"point": "node", "line": "way", "polygon": "way"},
+    "output": "(._;>;);out geom qt;",
+    "format": "[out:json]",
+    "osmapi": "https://overpass-api.de/api/interpreter",
+    "osmtag": {
+      "Aerialway":        "aerialway",
+      "Aeroway":          "aeroway",
+      "Amenity":          "amenity",
+      "Barrier":          "barrier",
+      "Boundary":         "boundary",
+      "Building":         "building",
+      "Craft":            "craft",
+      "Emergency":        "emergency",
+      "Geological":       "geological",
+      "Highway":          "highway",
+      "Historic":         "historic",
+      "Landuse":          "landuse",
+      "Leisure":          "leisure",
+      "Man Made":         "man_made",
+      "Military":         "military",
+      "Natural":          "natural",
+      "Office":           "office",
+      "Place":            "place",
+      "Power":            "power",
+      "Public Transport": "public transport",
+      "Railway":          "railway",
+      "Route":            "route",
+      "Shop":             "shop",
+      "Sport":            "sport",
+      "Tourism":          "tourism",
+      "Waterway":         "waterway"
+    }
+  }
+}
