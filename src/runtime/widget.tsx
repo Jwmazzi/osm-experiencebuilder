@@ -41,8 +41,6 @@ export default class Widget extends BaseWidget<AllWidgetProps<IMConfig>, any> {
   processNodes = (osmElements) => {
 
     let graphics = osmElements.slice(0, 100).map((el) => {
-      console.log(JSON.stringify(el.tags))
-      console.log(el)
       return Graphic({
         geometry: {type: 'point', longitude: el.lon, latitude: el.lat},
         symbol: this.props.config.pointSymbol,
@@ -63,7 +61,6 @@ export default class Widget extends BaseWidget<AllWidgetProps<IMConfig>, any> {
     let ways = osmElements.filter(el => el.type === 'way')
     
     let graphics = ways.slice(0, 100).map((el) => {
-
       return Graphic({
         geometry: {type: 'polyline', paths: el.geometry.map((el) => {return [el.lon, el.lat]})},
         symbol: this.props.config.lineSymbol,
