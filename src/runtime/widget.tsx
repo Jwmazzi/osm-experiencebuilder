@@ -7,10 +7,12 @@ import Selection from './Selection'
 import SpatialReference = require("esri/geometry/SpatialReference")
 import Projection = require("esri/geometry/projection")
 import Graphic = require("esri/Graphic")
+import Polyline = require("esri/geometry/Polyline")
 import Point = require("esri/geometry/Point")
 
 import axios = require('axios')
-import { link } from 'fs';
+import { ConsoleReporter } from 'jasmine';
+
 
 export default class Widget extends BaseWidget<AllWidgetProps<IMConfig>, any> {
 
@@ -18,32 +20,72 @@ export default class Widget extends BaseWidget<AllWidgetProps<IMConfig>, any> {
     super(props)
 
     this.state = {
-      JimuMapView: null,
       osm: this.props.config.osm,
-      elements: [],
-      markerSymbol: {
-        type: "simple-marker",
-        color: [226, 119, 40],
-        outline: {
-          color: [255, 255, 255],
-          width: 2
-        }
-      }
+      JimuMapView: null,
+      elements: []
     }
   }
 
-  processElements = (osmElements) => {
+  handleTags(tagObj) {
+
+    let tagList = ''
+
+    for (let [tag, val] of Object.entries(tagObj)) {
+      tagList += `<tr><td>${tag}</td><td>${val}</td></tr>`
+    }
+
+    return `<table>${tagList}</table>`
+
+  }
+
+  processNodes = (osmElements) => {
 
     let graphics = osmElements.slice(0, 100).map((el) => {
+      console.log(JSON.stringify(el.tags))
+      console.log(el)
       return Graphic({
         geometry: {type: 'point', longitude: el.lon, latitude: el.lat},
-        symbol: this.state.markerSymbol,
+        symbol: this.props.config.pointSymbol,
         attributes: el.tags,
-        fetching: false
+        popupTemplate: {
+          title: `OSM ID: ${el.id}`,
+          content: this.handleTags(el.tags)
+        }
       })
     })
 
     return graphics
+    
+  }
+
+  processWays = (osmElements) => {
+
+    let ways = osmElements.filter(el => el.type === 'way')
+    
+    let graphics = ways.slice(0, 100).map((el) => {
+
+      return Graphic({
+        geometry: {type: 'polyline', paths: el.geometry.map((el) => {return [el.lon, el.lat]})},
+        symbol: this.props.config.lineSymbol,
+        attributes: el.tags,
+        popupTemplate: {
+          title: `OSM ID: ${el.id}`,
+          content: this.handleTags(el.tags)
+        }
+      })
+
+    })
+
+    return graphics
+
+  }
+
+  getOSMQuery = (element, tag, boundary) => {
+
+    let main = `${element}["${tag}"]${boundary}`
+    let args = [this.state.osm.format, main, this.state.osm.output]
+
+    return args.join(';')
     
   }
 
@@ -52,7 +94,6 @@ export default class Widget extends BaseWidget<AllWidgetProps<IMConfig>, any> {
     let extent = this.state.jimuMapView.view.extent
 
     // TODO - Verify Extent not WGS 84 Before Attempting Projection
-
     Projection.load().then(() => {
 
       let min = Point({x: extent.xmin, y: extent.ymin, spatialReference: new SpatialReference(3857)})
@@ -63,26 +104,23 @@ export default class Widget extends BaseWidget<AllWidgetProps<IMConfig>, any> {
       let ele = document.getElementById('etypes').selectedOptions[0].value
       let tag = document.getElementById('osmtags').selectedOptions[0].value
 
-      let main = `${ele}["${tag}"]${box}`
-      let args = [this.state.osm.format, main, this.state.osm.output]
+      let args = this.getOSMQuery(ele, tag, box)
 
       this.setState({fetching: true})
 
-      axios.post(this.state.osm.osmapi, args.join(';')).then((res) => {
+      axios.post(this.state.osm.osmapi, args).then((res) => {
 
-        let geomList = this.processElements(res.data.elements)
+        if (ele === 'node') {
+          var geomList = this.processNodes(res.data.elements)
+        } else {
+          var geomList = this.processWays(res.data.elements)
+        }
   
         if (geomList.length > 0) {
           this.state.jimuMapView.view.graphics.addMany(geomList)
-          this.setState({
-            elements: geomList,
-            fetching: false
-          })
+          this.setState({elements: geomList, fetching: false})
         } else {
-          this.setState({
-            elements: [],
-            fetching: false
-          })
+          this.setState({elements: [], fetching: false})
         }
 
       }).catch(err => {console.log(err); this.setState({fetching: false})})

@@ -32,5 +32,26 @@
       "Tourism":          "tourism",
       "Waterway":         "waterway"
     }
+  },
+  "pointSymbol": {
+    "type": "simple-marker",
+    "color": [226, 119, 40],
+    "outline": {
+      "color": [255, 255, 255],
+      "width": 2
+    }
+  },
+  "lineSymbol": {
+    "type": "simple-line",
+    "color": [226, 119, 40],
+    "width": 4
+  },
+  "polySymbol": {
+    "type": "simple-fill",
+    "color": [227, 139, 79, 0.8],
+    "outline": {
+      "color": [255, 255, 255],
+      "width": 1
+    }
   }
 }
