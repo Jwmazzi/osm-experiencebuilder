@@ -11,7 +11,6 @@ import Polyline = require("esri/geometry/Polyline")
 import Point = require("esri/geometry/Point")
 
 import axios = require('axios')
-import { ConsoleReporter } from 'jasmine';
 
 
 export default class Widget extends BaseWidget<AllWidgetProps<IMConfig>, any> {
@@ -40,7 +39,7 @@ export default class Widget extends BaseWidget<AllWidgetProps<IMConfig>, any> {
 
   processNodes = (osmElements) => {
 
-    let graphics = osmElements.slice(0, 100).map((el) => {
+    let graphics = osmElements.slice(0, 500).map((el) => {
       return Graphic({
         geometry: {type: 'point', longitude: el.lon, latitude: el.lat},
         symbol: this.props.config.pointSymbol,
@@ -56,14 +55,27 @@ export default class Widget extends BaseWidget<AllWidgetProps<IMConfig>, any> {
     
   }
 
-  processWays = (osmElements) => {
+  processWays = (osmElements, geoType) => {
 
-    let ways = osmElements.filter(el => el.type === 'way')
+    if (geoType === 'LINE') {
+      var ways = osmElements.filter(el => el.type === 'way' && el.nodes[0] != el.nodes.slice(-1)[0])
+    }  else {
+      var ways = osmElements.filter(el => el.type === 'way' && el.nodes[0] == el.nodes.slice(-1)[0])
+    }
     
-    let graphics = ways.slice(0, 100).map((el) => {
+    let graphics = ways.slice(0, 500).map((el) => {
+
+      if (geoType === 'LINE') {
+        var g = {type: 'polyline', paths: el.geometry.map((el) => {return [el.lon, el.lat]})}
+        var s = this.props.config.lineSymbol
+      } else {
+        var g = {type: 'polygon', rings: el.geometry.map((el) => {return [el.lon, el.lat]})}
+        var s = this.props.config.polySymbol
+      }
+
       return Graphic({
-        geometry: {type: 'polyline', paths: el.geometry.map((el) => {return [el.lon, el.lat]})},
-        symbol: this.props.config.lineSymbol,
+        geometry: g,
+        symbol: s,
         attributes: el.tags,
         popupTemplate: {
           title: `OSM ID: ${el.id}`,
@@ -88,6 +100,8 @@ export default class Widget extends BaseWidget<AllWidgetProps<IMConfig>, any> {
 
   fetchOSM = () => {
 
+    this.state.jimuMapView.view.graphics.removeAll()
+
     let extent = this.state.jimuMapView.view.extent
 
     // TODO - Verify Extent not WGS 84 Before Attempting Projection
@@ -98,6 +112,7 @@ export default class Widget extends BaseWidget<AllWidgetProps<IMConfig>, any> {
       let prj = Projection.project([min, max], new SpatialReference(4326))
       let box = `(${prj[0].y}, ${prj[0].x}, ${prj[1].y}, ${prj[1].x})`
 
+      let geo = document.getElementById('etypes').selectedOptions[0].innerHTML
       let ele = document.getElementById('etypes').selectedOptions[0].value
       let tag = document.getElementById('osmtags').selectedOptions[0].value
 
@@ -110,7 +125,7 @@ export default class Widget extends BaseWidget<AllWidgetProps<IMConfig>, any> {
         if (ele === 'node') {
           var geomList = this.processNodes(res.data.elements)
         } else {
-          var geomList = this.processWays(res.data.elements)
+          var geomList = this.processWays(res.data.elements, geo)
         }
   
         if (geomList.length > 0) {

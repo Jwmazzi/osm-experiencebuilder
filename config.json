@@ -44,7 +44,7 @@
   "lineSymbol": {
     "type": "simple-line",
     "color": [226, 119, 40],
-    "width": 4
+    "width": 2
   },
   "polySymbol": {
     "type": "simple-fill",
