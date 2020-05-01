@@ -4,13 +4,20 @@ import { JimuMapViewComponent, JimuMapView } from "jimu-arcgis"
 import { IMConfig } from '../config'
 import Selection from './Selection'
 
+import CalciteThemeProvider from 'calcite-react/CalciteThemeProvider'
+import { CalciteH4 } from 'calcite-react/Elements'
+import Loader from 'calcite-react/Loader'
+import Form, { FormControl } from 'calcite-react/Form'
+import Button from 'calcite-react/Button'
+
 import SpatialReference = require("esri/geometry/SpatialReference")
 import Projection = require("esri/geometry/projection")
 import Graphic = require("esri/Graphic")
-import Polyline = require("esri/geometry/Polyline")
 import Point = require("esri/geometry/Point")
 
 import axios = require('axios')
+
+require('./stylesheets/style.scss')
 
 
 export default class Widget extends BaseWidget<AllWidgetProps<IMConfig>, any> {
@@ -149,14 +156,19 @@ export default class Widget extends BaseWidget<AllWidgetProps<IMConfig>, any> {
 
   render() {
 
-    if (this.state.fetching) return <p>Fetching OSM Data . . .</p>
+    if (this.state.fetching) return <Loader />
 
     return (
-      <div>
-        <p>OSM Viewer</p>
-        <Selection id="etypes" options={this.state.osm.etypes}/>
-        <Selection id="osmtags" options={this.state.osm.osmtag}/>
-        <button onClick={this.fetchOSM} type="button">Fetch OSM</button>
+      <CalciteThemeProvider>
+        <div style={{margin: '25px'}}>
+          <CalciteH4 style={{textAlign: "center"}}>OSM Viewer</CalciteH4>
+          <Form>
+            <Selection id="etypes" options={this.state.osm.etypes}/>
+            <Selection id="osmtags" options={this.state.osm.osmtag}/>
+            <Button style={{marginTop: "5px"}} green onClick={this.fetchOSM}>Fetch OSM</Button>
+          </Form>
+          <CalciteH4 style={{textAlign: "center", marginTop: "25px"}}>Elements In Current Extent: {this.state.elements.length}</CalciteH4>
+        </div>
         {
         this.props.hasOwnProperty("useMapWidgetIds") &&
         this.props.useMapWidgetIds &&
@@ -167,9 +179,8 @@ export default class Widget extends BaseWidget<AllWidgetProps<IMConfig>, any> {
           />
           )
         }
-        <p>Elements In Current Extent: {this.state.elements.length}</p>
-      </div>
+      </CalciteThemeProvider>
     )
-
   }
+
 }
