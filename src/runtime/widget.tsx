@@ -7,17 +7,23 @@ import Selection from './Selection'
 import CalciteThemeProvider from 'calcite-react/CalciteThemeProvider'
 import { CalciteH4 } from 'calcite-react/Elements'
 import Loader from 'calcite-react/Loader'
-import Form, { FormControl } from 'calcite-react/Form'
+import Form from 'calcite-react/Form'
 import Button from 'calcite-react/Button'
+import styled, { css } from 'styled-components';
 
 import SpatialReference = require("esri/geometry/SpatialReference")
 import Projection = require("esri/geometry/projection")
 import Graphic = require("esri/Graphic")
 import Point = require("esri/geometry/Point")
 
-import axios = require('axios')
-
 require('./stylesheets/style.scss')
+
+
+const CenteredLoader = styled(Loader)`
+  position: absolute; 
+  left: 50%; top: 50%; 
+  transform: translate(-50%, -50%)
+`
 
 
 export default class Widget extends BaseWidget<AllWidgetProps<IMConfig>, any> {
@@ -127,12 +133,17 @@ export default class Widget extends BaseWidget<AllWidgetProps<IMConfig>, any> {
 
       this.setState({fetching: true})
 
-      axios.post(this.state.osm.osmapi, args).then((res) => {
+      fetch(this.state.osm.osmapi, {
+        headers: {"Content-Type": "application/x-www-form-urlencoded"},
+        method: 'post',
+        body: args
+      }).then((response) => {return response.json()
+      }).then((data) => {
 
         if (ele === 'node') {
-          var geomList = this.processNodes(res.data.elements)
+          var geomList = this.processNodes(data.elements)
         } else {
-          var geomList = this.processWays(res.data.elements, geo)
+          var geomList = this.processWays(data.elements, geo)
         }
   
         if (geomList.length > 0) {
@@ -156,12 +167,13 @@ export default class Widget extends BaseWidget<AllWidgetProps<IMConfig>, any> {
 
   render() {
 
-    if (this.state.fetching) return <Loader />
+    if (this.state.fetching) return <CenteredLoader />
 
     return (
       <CalciteThemeProvider>
+
         <div style={{margin: '25px'}}>
-          <CalciteH4 style={{textAlign: "center"}}>OSM Viewer</CalciteH4>
+          <CalciteH4 style={{textAlign: "center"}}>OSM Explorer</CalciteH4>
           <Form>
             <Selection id="etypes" options={this.state.osm.etypes}/>
             <Selection id="osmtags" options={this.state.osm.osmtag}/>
@@ -169,6 +181,7 @@ export default class Widget extends BaseWidget<AllWidgetProps<IMConfig>, any> {
           </Form>
           <CalciteH4 style={{textAlign: "center", marginTop: "25px"}}>Elements In Current Extent: {this.state.elements.length}</CalciteH4>
         </div>
+        
         {
         this.props.hasOwnProperty("useMapWidgetIds") &&
         this.props.useMapWidgetIds &&
