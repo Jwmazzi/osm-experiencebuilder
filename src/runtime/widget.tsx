@@ -171,7 +171,6 @@ export default class Widget extends BaseWidget<AllWidgetProps<IMConfig>, any> {
 
     return (
       <CalciteThemeProvider>
-
         <div style={{margin: '25px'}}>
           <CalciteH4 style={{textAlign: "center"}}>OSM Explorer</CalciteH4>
           <Form>
